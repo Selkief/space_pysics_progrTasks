@@ -13,13 +13,19 @@ g = 9.81 #[m/s] gravitational acceleration
 #O2 weighs 32amu or g/mol
 
 def calc_H(data_file, height):
-    n = data_file.iloc[height,1]+ data_file.iloc[height,2]+ data_file.iloc[height,3] #nr density all molecules at certain height
+     #nr density all molecules at certain height
+    n = data_file.iloc[height,1]+ data_file.iloc[height,2]+ data_file.iloc[height,3]
     print(n)
     #average molecule weight
     m = (data_file.iloc[height,1]*16 + data_file.iloc[height,2]*28 + data_file.iloc[height,3]*32)/n *1.66054 * 10e-27 #[kg]
+    #scale height
     H = (k_B * data_file.iloc[height,5]) / (m * g)
     return H
 
 H_0 = calc_H(data, 0)
 H_10 = calc_H(data, 10)
-print(H_0, H_10)
+print(f"scale height at 0km:{H_0}m, at 10km: {H_10}m")
+
+#scale height for single species
+#constant g
+
