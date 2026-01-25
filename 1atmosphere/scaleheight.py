@@ -7,7 +7,7 @@ data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTa
 
 #calculate scaleheight from data --> H= k_B*T/(m*g)
 k_B = 1.38 * 10e-23     #[m^2*kg/(K*s^2)] boltzmanns constant
-g0, g = 9.82, 0 #[m/s] gravitational acceleration
+g0 = 9.82 #[m/s] gravitational acceleration
 R_E = 6378 *10e3 #[m] earth radius
 #O weighs 16amu or g/mol
 #N2 weighs 28amu or g/mol
@@ -37,7 +37,7 @@ def calc_H2(data_file, height, g, species):
         m = 32 * 1.66054 * 10e-27
     
     if g =="g_z":
-        g = g0 * R_E**2 /(R_E + height*10e-3)**2
+        g = g0 * R_E**2 /(R_E + height*10e3)**2
     else:
         g = g0
     H = (k_B * data_file.iloc[height, 5]) / (m * g)
@@ -50,21 +50,26 @@ H_120_O2 = calc_H2(data, 120, g0, "O2")
 H_600_O = calc_H2(data, 600, g0, "O")
 H_600_N2 = calc_H2(data, 600, g0, "N2")
 H_600_O2 = calc_H2(data, 600, g0, "O2")
+H_cstg =[H_120_O, H_120_N2, H_120_O2, H_600_O, H_600_N2, H_600_O2]
 
 #non-constant g:
-H_120_gz_O = calc_H2(data, 120, g, "O")
-H_120_gz_N2 = calc_H2(data, 120, g, "N2")
-H_120_gz_O2 = calc_H2(data, 120, g, "O2")
-H_600_gz_O = calc_H2(data, 600, g, "O")
-H_600_gz_N2 = calc_H2(data, 600, g, "N2")
-H_600_gz_O2 = calc_H2(data, 600, g, "O2")
+H_120_gz_O = calc_H2(data, 120, "g_z", "O")
+H_120_gz_N2 = calc_H2(data, 120, "g_z", "N2")
+H_120_gz_O2 = calc_H2(data, 120, "g_z", "O2")
+H_600_gz_O = calc_H2(data, 600, "g_z", "O")
+H_600_gz_N2 = calc_H2(data, 600, "g_z", "N2")
+H_600_gz_O2 = calc_H2(data, 600, "g_z", "O2")
+H_gz = [H_120_gz_O, H_120_gz_N2, H_120_gz_O2, H_600_gz_O, H_600_gz_N2, H_600_gz_O2]
+
+diff = []
+for i in range(6):
+   diff.append(float(H_gz[i] - H_cstg[i]))
 
 
-
-print(f"scale height 120km cst g for O {H_120_O}m for N2 {H_120_N2}m for O2 {H_120_O2}m")
-print(f"scale height 600km cst g for O {H_600_O}m for N2 {H_600_N2}m for O2 {H_600_O2}m")
-
-print(f"scale height 120km non-cst g for O {H_120_gz_O}m for N2 {H_120_gz_N2}m for O2 {H_120_gz_O2}m")
-print(f"scale height 600km non-cst g for O {H_600_gz_O}m for N2 {H_600_gz_N2}m for O2 {H_600_gz_O2}m")
+print(f"scale height 120km cst g for O {H_120_O:.2f}m for N2 {H_120_N2:.2f}m for O2 {H_120_O2:.2f}m")
+print(f"scale height 600km cst g for O {H_600_O:.2f}m for N2 {H_600_N2:.2f}m for O2 {H_600_O2:.2f}m")
+print(f"scale height 120km cst g for O {H_120_gz_O:.2f}m for N2 {H_120_gz_N2:.2f}m for O2 {H_120_gz_O2:.2f}m")
+print(f"scale height 600km cst g for O {H_600_gz_O:.2f}m for N2 {H_600_gz_N2:.2f}m for O2 {H_600_gz_O2:.2f}m")
+print(f"difference between constant and non-constant g (in m):{diff}")
 
 
