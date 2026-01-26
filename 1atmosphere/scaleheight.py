@@ -49,7 +49,7 @@ def exp_H(data_file, height, species):
         column = 3
     H = []
     for i in range(1,height):
-        Hz = (-data_file.iloc[i,column])/(data_file.iloc[i, column]-data_file.iloc[i-1, column]/10e3)
+        Hz = (-data_file.iloc[i,column])/(data_file.iloc[i, column]-data_file.iloc[i-1, column]/10e4)
         H.append(float(Hz))
     return np.nansum(H)
 
@@ -103,10 +103,10 @@ H_N2 = []
 H_O2 = []
 
 for k in range(600):
-    H_all.append(float(calc_Hall(data, k))*10e-3)
-    H_O.append(float(calc_Hsingle(data, k, g0, "O"))*10e-3)
-    H_N2.append(float(calc_Hsingle(data, k, g0, "N2"))*10e-3)
-    H_O2.append((float(calc_Hsingle(data, k, g0, "O2"))*10e-3))
+    H_all.append(float(calc_Hall(data, k))*10e-4)
+    H_O.append(float(calc_Hsingle(data, k, g0, "O"))*10e-4)
+    H_N2.append(float(calc_Hsingle(data, k, g0, "N2"))*10e-4)
+    H_O2.append((float(calc_Hsingle(data, k, g0, "O2"))*10e-4))
 #define some axis for height
 z = np.arange(600)
 
