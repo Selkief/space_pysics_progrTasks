@@ -4,7 +4,7 @@ import numpy as np
 
 data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
 
-#calculate scaleheight from data --> H= k_B*T/(m*g)
+##constants
 k_B = 1.38 * 10e-24     #[m^2*kg/(K*s^2)] boltzmanns constant
 g0 = 9.82 #[m/s] gravitational acceleration
 R_E = 6378 *10e2 #[m] earth radius
@@ -13,13 +13,15 @@ p0 = 101325 #[Pa] std pressure at sealevel
 #N2 weighs 28amu or g/mol
 #O2 weighs 32amu or g/mol
 
-#define functions
+##define functions
+#calculate scaleheight --> H= k_B*T/(m*g)
 #scale height for all species
 def calc_Hall(data_file, height, g):
-     #nr density all molecules at certain height
+     #nr density all molecules
     n = data_file.iloc[height,1]+ data_file.iloc[height,2]+ data_file.iloc[height,3]
     #average molecule weight
     m = (data_file.iloc[height,1]*16 + data_file.iloc[height,2]*28 + data_file.iloc[height,3]*32)/n *1.66054 * 10e-28 #[kg]
+    #constant g or z-dependent g
     if g =="g_z":
         g = g0 * R_E**2 /(R_E + height*10e2)**2
     else:
@@ -45,6 +47,7 @@ def calc_Hsingle(data_file, height, g, species):
     return H
 
 #experimental scale height H_x = -n_x/(dn_x/dz)
+#doesnt make sense yet
 def exp_H(data_file, height, species):
     if species == "O":
         column = 1
@@ -58,12 +61,12 @@ def exp_H(data_file, height, species):
         H.append(float(Hz))
     return np.nansum(H)
 
-#calculate results
-#scaleheight for all species
+##calculate results
+#scaleheight for all species at 0km and 10km
 H_0 = calc_Hall(data, 0, g0)
 H_10 = calc_Hall(data, 10, g0)
 
-#scaleheight for single species
+#scaleheight for single species at 120km and 600km
 #constant g:
 H_120_O = calc_Hsingle(data, 120, g0, "O")
 H_120_N2 = calc_Hsingle(data, 120, g0, "N2")
@@ -72,7 +75,6 @@ H_600_O = calc_Hsingle(data, 600, g0, "O")
 H_600_N2 = calc_Hsingle(data, 600, g0, "N2")
 H_600_O2 = calc_Hsingle(data, 600, g0, "O2")
 H_cstg =[H_120_O, H_120_N2, H_120_O2, H_600_O, H_600_N2, H_600_O2]
-
 #non-constant g:
 H_120_gz_O = calc_Hsingle(data, 120, "g_z", "O")
 H_120_gz_N2 = calc_Hsingle(data, 120, "g_z", "N2")
@@ -87,7 +89,7 @@ diff = []
 for i in range(6):
    diff.append(float(H_gz[i] - H_cstg[i]))
 
-#exp scaleheight: #doesnt work yet
+#exp scaleheight: 
 expH_120_O = exp_H(data, 120, "O")
 exp_H_600_O = exp_H(data, 600, "O")
 
@@ -101,7 +103,7 @@ print(f"difference between constant and non-constant g (in m):{diff}")
 
 print(f"experimental scaleheight for O at 120km {expH_120_O} and at 600km {exp_H_600_O}")
 
-#part 2: altitude variations of scaleheight
+#part 2: altitude variations of scaleheight from 0-600km
 H_all = []
 H_all_gz = []
 H_O = []
@@ -109,26 +111,37 @@ H_N2 = []
 H_O2 = []
 
 for k in range(600):
+    #all species cst g
     H_all.append(float(calc_Hall(data, k, g0))*10e-4)
+    #all species varying g
     H_all_gz.append(float(calc_Hall(data, k, "gz"))*10e-4)
+    #single species cst g
     H_O.append(float(calc_Hsingle(data, k, g0, "O"))*10e-4)
     H_N2.append(float(calc_Hsingle(data, k, g0, "N2"))*10e-4)
     H_O2.append((float(calc_Hsingle(data, k, g0, "O2"))*10e-4))
 
-#numerical integration pressure variation (midpoint)
-p = [0 for _ in range(len(H_all))]
-p[0] = p0
+##part 3: pressure variations
+#numerical integration
+p_num = [0 for _ in range(len(H_all))]
+p_num[0] = p0
 dz = 1
 for i in range(1,len(H_all)):
-    p[i] = p[i-1] - (p[i-1]/H_all_gz[i-1])*(dz)
-p = np.array(p)
+    p_num[i] = p_num[i-1] - (p_num[i-1]/H_all_gz[i-1])*(dz)
+p_num = np.array(p_num)
 
-#half analytical solution
+#(half) analytical solution (p = p0*exp(-integral(1/H)dz)
 H_num = [0 for _ in range(len(H_all))]
 H_num[0] = 1/H_all_gz[0]
 for i in range(1, len(H_all)):
     H_num[i] = H_num[i-1] + 1/(H_all_gz[i-1])*dz
 p_analytic = p0 * np.exp(-np.array(H_num))
+
+#ideal gas law p = n*k_B*T where n = N/V
+p_gasslaw = []
+for i in range(600):
+    n = (data.iloc[i,1]+data.iloc[i,2]+data.iloc[i,3])*10e5
+    p_gasslaw.append(n*k_B*data.iloc[i,5])
+p_gasslaw = np.array(p_gasslaw)
 
 
 #plot results
@@ -162,9 +175,10 @@ axs[1].set_ylabel("height in km")
 plt.tight_layout()
 plt.show()
 
-#pressure variations numerical integration
+#pressure variations numerical, analytic and gass law
 plt.plot(p*10e-4, z, label="numerical solution")
 plt.plot(p_analytic*10e-4, z, label = "half analytical solution")
+plt.plot(p_gasslaw*10e-4, z, label="gass law")
 plt.grid(True)
 plt.title("pressure variation")
 plt.xlabel("pressure [kPa]")
@@ -172,9 +186,12 @@ plt.ylabel("height (km)")
 plt.legend()
 plt.show()
 
-plt.plot((p-p_analytic)*10e-4)
+#differences between pressure variations
+plt.plot((p-p_analytic)*10e-4, label="p numerical vs analytical")
+plt.plot((p_analytic - p_gasslaw)*10e-4, label="p analytical vs gass law")
 plt.ylabel("difference (kPa)")
 plt.xlabel("height")
 plt.title("difference between solutions p variations")
 plt.grid()
+plt.legend()
 plt.show()
