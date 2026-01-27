@@ -9,6 +9,7 @@ data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTa
 k_B = 1.38 * 10e-23     #[m^2*kg/(K*s^2)] boltzmanns constant
 g0 = 9.82 #[m/s] gravitational acceleration
 R_E = 6378 *10e3 #[m] earth radius
+p0 = 101325 #[Pa] std pressure at sealevel
 #O weighs 16amu or g/mol
 #N2 weighs 28amu or g/mol
 #O2 weighs 32amu or g/mol
