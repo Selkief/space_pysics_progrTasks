@@ -47,8 +47,7 @@ def calc_Hsingle(data_file, height, g, species):
     return H
 
 #experimental scale height H_x = -n_x/(dn_x/dz)
-#doesnt make sense yet
-def exp_H(data_file, height, species):
+def exp_H(data_file, species):
     if species == "O":
         column = 1
     elif species == "N2":
@@ -56,10 +55,11 @@ def exp_H(data_file, height, species):
     elif species == "O2":
         column = 3
     H = []
-    for i in range(1,height):
-        Hz = (-data_file.iloc[i,column])/(data_file.iloc[i, column]-data_file.iloc[i-1, column]/10e2)
+    for i in range(1,600):
+        Hz = (-data_file.iloc[i,column])/((data_file.iloc[i, column]-data_file.iloc[i-1, column])/10e2)
         H.append(float(Hz))
-    return np.nansum(H)
+    return H
+
 
 ##calculate results
 #scaleheight for all species at 0km and 10km
@@ -90,8 +90,9 @@ for i in range(6):
    diff.append(float(H_gz[i] - H_cstg[i]))
 
 #exp scaleheight: 
-expH_120_O = exp_H(data, 120, "O")
-exp_H_600_O = exp_H(data, 600, "O")
+exp_H_O = exp_H(data, "O")
+exp_H_N2 = exp_H(data, "N2")
+exp_H_O2 = exp_H(data, "O2")
 
 #print solutions for part 1
 print(f"scale height at 0km:{H_0:.2f}m, at 10km: {H_10:.2f}m")
@@ -101,7 +102,8 @@ print(f"scale height 120km non-cst g for O {H_120_gz_O:.2f}m for N2 {H_120_gz_N2
 print(f"scale height 600km non-cst g for O {H_600_gz_O:.2f}m for N2 {H_600_gz_N2:.2f}m for O2 {H_600_gz_O2:.2f}m")
 print(f"difference between constant and non-constant g (in m):{diff}")
 
-print(f"experimental scaleheight for O at 120km {expH_120_O} and at 600km {exp_H_600_O}")
+print(f"experimental scaleheight at 120km for O {exp_H_O[120-2]:.2f}m for N2 {exp_H_N2[120-2]:.2f}m and O2 {exp_H_O2[120-2]:.2f}m.")
+print(f"experimental scaleheight at 600km for O {exp_H_O[600-2]:.2f}m and for N2 {exp_H_N2[600-2]:.2f}m and for O2 {exp_H_O2[600-2]:.2f}m.")
 
 #part 2: altitude variations of scaleheight from 0-600km
 H_all = []
@@ -143,6 +145,11 @@ for i in range(600):
     p_gasslaw.append(n*k_B*data.iloc[i,5])
 p_gasslaw = np.array(p_gasslaw)
 
+#part 3: temperature gradient and adiabatic lapse rate
+grad_T = []
+for i in range(1,600):
+    grad_T.append(data.iloc[i,5] - data.iloc[i-1, 5])
+grad_T = np.array(grad_T)
 
 #plot results
 #scaleheight variations for different species
@@ -159,7 +166,7 @@ axs[1].set_title("scaleheight for O")
 axs[1].set_xlabel("scaleheight in km")
 axs[1].set_ylabel("height in km")
 plt.tight_layout()
-plt.show()
+
 
 fig, axs = plt.subplots(1,2)
 axs[0].plot(H_N2,z)
@@ -175,8 +182,12 @@ axs[1].set_ylabel("height in km")
 plt.tight_layout()
 plt.show()
 
+print(len(exp_H_O))
+plt.scatter(exp_H_O, z[:-1], label="experimental scaleheight for O", s=10)
+plt.show()
+
 #pressure variations numerical, analytic and gass law
-plt.plot(p*10e-4, z, label="numerical solution")
+plt.plot(p_num*10e-4, z, label="numerical solution")
 plt.plot(p_analytic*10e-4, z, label = "half analytical solution")
 plt.plot(p_gasslaw*10e-4, z, label="gass law")
 plt.grid(True)
@@ -187,11 +198,20 @@ plt.legend()
 plt.show()
 
 #differences between pressure variations
-plt.plot((p-p_analytic)*10e-4, label="p numerical vs analytical")
+plt.plot((p_num-p_analytic)*10e-4, label="p numerical vs analytical")
 plt.plot((p_analytic - p_gasslaw)*10e-4, label="p analytical vs gass law")
 plt.ylabel("difference (kPa)")
 plt.xlabel("height")
 plt.title("difference between solutions p variations")
+plt.grid()
+plt.legend()
+plt.show()
+
+#temperature gradient
+plt.plot(grad_T, z[:-1], label="dT/dz")
+plt.axvline(x=9.8, color = "green", label="dry adiabat")
+plt.ylabel("height (km)")
+plt.xlabel("lapse rate (K/km)")
 plt.grid()
 plt.legend()
 plt.show()
