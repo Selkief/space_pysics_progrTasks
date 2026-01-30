@@ -57,7 +57,8 @@ def exp_H(data_file, species):
     H = []
     for i in range(1,600):
         Hz = (-data_file.iloc[i,column])/((data_file.iloc[i, column]-data_file.iloc[i-1, column])/10e2)
-        H.append(float(Hz))
+        if Hz>=0:
+            H.append(float(Hz))
     return H
 
 
@@ -90,9 +91,12 @@ for i in range(6):
    diff.append(float(H_gz[i] - H_cstg[i]))
 
 #exp scaleheight: 
-exp_H_O = exp_H(data, "O")
-exp_H_N2 = exp_H(data, "N2")
-exp_H_O2 = exp_H(data, "O2")
+exp_H_O = np.array(exp_H(data, "O"))
+print(len(exp_H_O))
+exp_H_N2 = np.array(exp_H(data, "N2"))
+print(len(exp_H_N2))
+exp_H_O2 = np.array(exp_H(data, "O2"))
+print(len(exp_H_O2))
 
 #print solutions for part 1
 print(f"scale height at 0km:{H_0:.2f}m, at 10km: {H_10:.2f}m")
@@ -102,8 +106,8 @@ print(f"scale height 120km non-cst g for O {H_120_gz_O:.2f}m for N2 {H_120_gz_N2
 print(f"scale height 600km non-cst g for O {H_600_gz_O:.2f}m for N2 {H_600_gz_N2:.2f}m for O2 {H_600_gz_O2:.2f}m")
 print(f"difference between constant and non-constant g (in m):{diff}")
 
-print(f"experimental scaleheight at 120km for O {exp_H_O[120-2]:.2f}m for N2 {exp_H_N2[120-2]:.2f}m and O2 {exp_H_O2[120-2]:.2f}m.")
-print(f"experimental scaleheight at 600km for O {exp_H_O[600-2]:.2f}m and for N2 {exp_H_N2[600-2]:.2f}m and for O2 {exp_H_O2[600-2]:.2f}m.")
+#print(f"experimental scaleheight at 120km for O {exp_H_O[120-2]:.2f}m for N2 {exp_H_N2[120-2]:.2f}m and O2 {exp_H_O2[120-2]:.2f}m.")
+#print(f"experimental scaleheight at 600km for O {exp_H_O[600-2]:.2f}m and for N2 {exp_H_N2[600-2]:.2f}m and for O2 {exp_H_O2[600-2]:.2f}m.")
 
 #part 2: altitude variations of scaleheight from 0-600km
 H_all = []
@@ -183,7 +187,13 @@ plt.tight_layout()
 plt.show()
 
 print(len(exp_H_O))
-plt.scatter(exp_H_O, z[:-1], label="experimental scaleheight for O", s=10)
+plt.scatter(exp_H_O*10e-4, z[99:], label="experimental scaleheight for O", s=10)
+plt.scatter(exp_H_N2*10e-4, z[:-1], label="experimental scaleheight for N2", s=10)
+plt.scatter(exp_H_O2*10e-4, z[:-1], label="experimental scaleheight for O2", s=10)
+plt.xlabel("scaleheight in km")
+plt.ylabel("height in km")
+plt.grid(True)
+plt.legend()
 plt.show()
 
 #pressure variations numerical, analytic and gass law

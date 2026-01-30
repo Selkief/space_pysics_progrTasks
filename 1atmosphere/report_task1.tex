@@ -145,11 +145,16 @@ This results are shown in table 2 and in figure 1.
 \end{table}
 \begin{figure}[H]
 	\centering
-	\caption{Experimental scaleheight.}
-	\includegraphics[width=0.5\textwidth]{exp_H}
+	\caption{Experimental scaleheight for O before filtering out the negative values and for the different species after filtering out the negative values for O.}
+	\begin{subfigure}[b]{0.43\textwidth}
+		\includegraphics[width=\textwidth]{exp_H}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.56\textwidth}
+		\includegraphics[width=\textwidth]{exp_H2}
+	\end{subfigure}
 \end{figure}
 
-The scaleheight here is lower than the one calculated before, especially at 120km. At 600km the difference is less large. The plot shows that the calculation is not really stable, some values are way negative or in a weird range. It might be that I implemented the equation wrong or that I could be using a different way of calculating the discrete derivative that is more stable or accurate. This is something that I should probably still find out. 
+The scaleheight here is lower than the one calculated before, especially at 120km. At 600km the difference is less large. The plot shows that the calculation is not really stable, some values are way negative or in a weird range for O, this occurs for the 0 or low densities of O. I also get a "divide by 0" error, so this function for experimental scaleheight doesn`t work for species that have zero density throughout the data. 
 
 \section{Atmospheric pressure variation}
 \subsection{altitude variations of atmospheric scale-height}
