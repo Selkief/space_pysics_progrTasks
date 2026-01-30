@@ -156,6 +156,7 @@ for i in range(1,600):
 grad_T = np.array(grad_T)
 
 #plot results
+plt.rcParams.update({'font.size': 14})
 #scaleheight variations for different species
 z = np.arange(600)
 fig, axs = plt.subplots(1,2)
@@ -219,7 +220,7 @@ plt.show()
 
 #temperature gradient
 plt.plot(grad_T, z[:-1], label="dT/dz")
-plt.axvline(x=9.8, color = "green", label="dry adiabat")
+plt.axvline(x=9.8, color = "green", label="dry adiabat (9.8K/km)")
 plt.ylabel("height (km)")
 plt.xlabel("lapse rate (K/km)")
 plt.grid()
