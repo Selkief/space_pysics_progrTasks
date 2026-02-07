@@ -5,9 +5,9 @@ import numpy as np
 data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
 
 ##constants
-k_B = 1.38 * 10e-24     #[m^2*kg/(K*s^2)] boltzmanns constant
+k_B = 1.38e-23     #[m^2*kg/(K*s^2)] boltzmanns constant
 g0 = 9.82 #[m/s] gravitational acceleration
-R_E = 6378 *10e2 #[m] earth radius
+R_E = 6378e3 #[m] earth radius
 p0 = 101325 #[Pa] std pressure at sealevel
 #O weighs 16amu or g/mol
 #N2 weighs 28amu or g/mol
@@ -23,7 +23,7 @@ def calc_Hall(data_file, height, g):
     m = (data_file.iloc[height,1]*16 + data_file.iloc[height,2]*28 + data_file.iloc[height,3]*32)/n *1.66054 * 10e-28 #[kg]
     #constant g or z-dependent g
     if g =="g_z":
-        g = g0 * R_E**2 /(R_E + height*10e2)**2
+        g = g0 * R_E**2 /(R_E + height*1e3)**2
     else:
         g = g0
     #scale height
@@ -33,14 +33,14 @@ def calc_Hall(data_file, height, g):
 #scale height for single species, cst g or varying g
 def calc_Hsingle(data_file, height, g, species):
     if species == "O":
-        m = 16 * 1.66054 * 10e-28
+        m = 16 * 1.66054e-27
     elif species == "N2":
-        m = 28 * 1.66054 * 10e-28
+        m = 28 * 1.66054e-27
     elif species == "O2":
-        m = 32 * 1.66054 * 10e-28
+        m = 32 * 1.66054e-27
     
     if g =="g_z":
-        g = g0 * R_E**2 /(R_E + height*10e2)**2
+        g = g0 * R_E**2 /(R_E + height*1e3)**2
     else:
         g = g0
     H = (k_B * data_file.iloc[height, 5]) / (m * g)
@@ -145,7 +145,7 @@ p_analytic = p0 * np.exp(-np.array(H_num))
 #ideal gas law p = n*k_B*T where n = N/V
 p_gasslaw = []
 for i in range(600):
-    n = (data.iloc[i,1]+data.iloc[i,2]+data.iloc[i,3])*10e5
+    n = (data.iloc[i,1]+data.iloc[i,2]+data.iloc[i,3])*1e6
     p_gasslaw.append(n*k_B*data.iloc[i,5])
 p_gasslaw = np.array(p_gasslaw)
 
@@ -188,9 +188,9 @@ plt.tight_layout()
 plt.show()
 
 print(len(exp_H_O))
-plt.scatter(exp_H_O*10e-4, z[99:], label="experimental scaleheight for O", s=10)
-plt.scatter(exp_H_N2*10e-4, z[:-1], label="experimental scaleheight for N2", s=10)
-plt.scatter(exp_H_O2*10e-4, z[:-1], label="experimental scaleheight for O2", s=10)
+plt.scatter(exp_H_O*1e-3, z[99:], label="experimental scaleheight for O", s=10)
+plt.scatter(exp_H_N2*1e-3, z[:-1], label="experimental scaleheight for N2", s=10)
+plt.scatter(exp_H_O2*1e-3, z[:-1], label="experimental scaleheight for O2", s=10)
 plt.xlabel("scaleheight in km")
 plt.ylabel("height in km")
 plt.grid(True)
@@ -198,9 +198,9 @@ plt.legend()
 plt.show()
 
 #pressure variations numerical, analytic and gass law
-plt.plot(p_num*10e-4, z, label="numerical solution")
-plt.plot(p_analytic*10e-4, z, label = "half analytical solution")
-plt.plot(p_gasslaw*10e-4, z, label="gass law")
+plt.plot(p_num*1e-3, z, label="numerical solution")
+plt.plot(p_analytic*1e-3, z, label = "half analytical solution")
+plt.plot(p_gasslaw*1e-3, z, label="gass law")
 plt.grid(True)
 plt.title("pressure variation")
 plt.xlabel("pressure [kPa]")
@@ -209,8 +209,8 @@ plt.legend()
 plt.show()
 
 #differences between pressure variations
-plt.plot((p_num-p_analytic)*10e-4, label="p numerical vs analytical")
-plt.plot((p_analytic - p_gasslaw)*10e-4, label="p analytical vs gass law")
+plt.plot((p_num-p_analytic)*1e-3, label="p numerical vs analytical")
+plt.plot((p_analytic - p_gasslaw)*1e-3, label="p analytical vs gass law")
 plt.ylabel("difference (kPa)")
 plt.xlabel("height")
 plt.title("difference between solutions p variations")
