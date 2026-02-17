@@ -28,45 +28,41 @@ cs_N2 = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,
 cs_O = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,2] )
 cs_O2 = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,3] )
 cs = [cs_O, cs_N2, cs_O2] #ordered to fit the order in the n_data file [m^2]
-print(cs_N2)
 
-
+#number densities all species heightprofiles
+n_all = n_data.iloc[:,1] + n_data.iloc[:,2] + n_data.iloc[:,3]
 
 #relevant angles for Xi
 Xi = [0, 15, 30, 45, 60, 75, 85] #[degrees]
 
-def Tau(altitude, angle):
+#this should work for angles up to 60
+def Tau(n_profiles, nr_of_species, altitude, angle):
     tau = 0
-    for i in range(3):
+    for i in range(nr_of_species):
         integral = 0
         for k in range(altitude, len(n_data.iloc[:,0])):
-            integral += n_data.iloc[k,i+1]*1e6*1000
+            integral += n_profiles.iloc[k,i+1]*1e6*1000
         tau += np.dot(cs[i] , integral)
-    return tau
+    return tau * 1/np.cos(angle*(np.pi/180))
 
-#calculating optical depth for all frequencies and all thermospheric heights
-#this is working but also extremely slow for all wavelengths and heights
-#Tau_X0 = []
-#for m in range(90, 92):
-#    T = []
-#    for idx, val in enumerate(I_data["wavelength"]):
-#        T.append(Tau(idx,m,0))
-#    print(T)
-#    Tau_X0.append(T)
+#optical depth for heights in the thermosphere (90-600km)
+#and for different angles of incidence
 optical_depth = []
-for m in range(90,600):
-    optical_depth.append(Tau(m, 0) )
+for X in Xi:
+    T = []
+    for m in range(90,600):
+        T.append(Tau(n_data, 3, m, X) )
+    optical_depth.append(T)
 
-sns.heatmap(optical_depth)
-plt.title("optical depth [m]")
-plt.show()
-
-sns.heatmap(optical_depth, norm=mcolors.LogNorm())
-plt.title("optical depth [m]")
-plt.show()
+#make plots of optical depth (logarithmic scale for the optical depth?)
+for ele in optical_depth:
+    plot = plt.pcolormesh(ele, norm=mcolors.LogNorm())
+    cbar = plt.colorbar(plot)
+    cbar.set_label("optical depth [m]")
+    plt.title(f"optical depth ")
+    plt.show()
 
 #number densities
-n_all = n_data.iloc[:,1] + n_data.iloc[:,2] + n_data.iloc[:,3]
 plt.plot(n_data.iloc[90:,1], n_data.iloc[90:,0], label="O")
 plt.plot(n_data.iloc[90:,2], n_data.iloc[90:,0], label="N2")
 plt.plot(n_data.iloc[90:,3], n_data.iloc[90:,0], label="O2")
