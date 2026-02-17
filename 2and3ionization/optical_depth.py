@@ -6,9 +6,6 @@
 #or just use the most complicated one which should be reduced to the simpler ones automatically
 #when using lower angles of incidence
 
-#optical depth for vertical incidence:
-#tau0 = sum( crosssections* integral( n(z)dz ) )
-
 #make plots with altitude variations of thermospheric densities
 #make plots with wavelength variations of cross sections
 
@@ -16,11 +13,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
-import seaborn as sns
 
+#read in all necessary data
+#heightprofiles of number densities [cm^-3]
 n_data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
+#Irradiance [W/m^2/nm] for different wavelengths [nm]
 I_data = pd.read_csv("2and3ionization/fism_daily_hr19990216.dat")
 I_data.rename(columns={"wavelength (nm)": "wavelength", "irradiance (W/m^2/nm)" : "irradiance"}, inplace=True)
+#crosssections [m^2] for different species for different wavelengths [m]
 cs_data = pd.read_csv("2and3ionization/phot_abs.dat",sep=r"\s+", skiprows=8)
 
 #interpolate cross sections to irradiance-wavelengths
@@ -29,37 +29,52 @@ cs_O = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,2
 cs_O2 = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,3] )
 cs = [cs_O, cs_N2, cs_O2] #ordered to fit the order in the n_data file [m^2]
 
-#number densities all species heightprofiles
+#number densities all species heightprofiles [cm^-3]
 n_all = n_data.iloc[:,1] + n_data.iloc[:,2] + n_data.iloc[:,3]
 
 #relevant angles for Xi
-Xi = [0, 15, 30, 45, 60, 75, 85] #[degrees]
+Xi = [0, 15, 30, 45, 60] #[degrees]
 
-#this should work for angles up to 60
+#optical depth for different angles of Xi, returns a list over all wavelength present in input data
+#this should work for angles up to 60 degrees
 def Tau(n_profiles, nr_of_species, altitude, angle):
     tau = 0
     for i in range(nr_of_species):
         integral = 0
-        for k in range(altitude, len(n_data.iloc[:,0])):
-            integral += n_profiles.iloc[k,i+1]*1e6*1000
-        tau += np.dot(cs[i] , integral)
-    return tau * 1/np.cos(angle*(np.pi/180))
+        for z in range( altitude, len(n_data.iloc[:,0]) ):
+            integral += n_profiles.iloc[z,i+1] * 1e6 * 1000
+        tau += np.dot( cs[i] , integral )
+    return tau * 1/np.cos( angle * (np.pi/180) )
 
 #optical depth for heights in the thermosphere (90-600km)
 #and for different angles of incidence
-optical_depth = []
+optical_depth = [] #in [m]
 for X in Xi:
     T = []
     for m in range(90,600):
-        T.append(Tau(n_data, 3, m, X) )
+        T.append( Tau(n_data, 3, m, X) )
     optical_depth.append(T)
 
+#Irradiance !!what does it mean "/nm" in file?! need to convert units?! why does 1e12 work?
+def Irradiance(opt_depth):
+    return np.array(I_data["irradiance"])*1e12 * np.exp(-np.array(opt_depth))
+
+
+
 #make plots of optical depth (logarithmic scale for the optical depth?)
+key = 0
 for ele in optical_depth:
-    plot = plt.pcolormesh(ele, norm=mcolors.LogNorm())
-    cbar = plt.colorbar(plot)
+    key += 1
+    fig, axs = plt.subplots(2,1)
+    plt.suptitle(f"solar zenith angle {Xi[key-1]} degrees")
+    plot = axs[0].pcolormesh(ele, norm=mcolors.LogNorm(vmin = 1e-1, vmax= 1e4))
+    plot2 = axs[1].pcolormesh(Irradiance(ele), norm=mcolors.LogNorm(vmin = 1e5, vmax = 1e10))
+    cbar = fig.colorbar(plot)
+    cbar2 = fig.colorbar(plot2)
     cbar.set_label("optical depth [m]")
-    plt.title(f"optical depth ")
+    cbar2.set_label("Irradiance")
+    
+    plt.tight_layout()
     plt.show()
 
 #number densities
