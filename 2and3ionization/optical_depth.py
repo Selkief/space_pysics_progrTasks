@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
+from scipy.interpolate import CubicSpline, PchipInterpolator,Akima1DInterpolator
 
 #read in all necessary data
 #heightprofiles of number densities [cm^-3]
@@ -46,34 +47,38 @@ def Tau(n_profiles, nr_of_species, altitude, angle):
         tau += np.dot( cs[i] , integral )
     return tau * 1/np.cos( angle * (np.pi/180) )
 
-#optical depth for heights in the thermosphere (90-600km)
+#calculate optical depth for heights in the thermosphere (90-600km)
 #and for different angles of incidence
 optical_depth = [] #in [m]
-for X in Xi:
+for idx,X in enumerate(Xi):
     T = []
     for m in range(90,600):
         T.append( Tau(n_data, 3, m, X) )
     optical_depth.append(T)
 
-#Irradiance !!what does it mean "/nm" in file?! need to convert units?! why does 1e12 work?
+#Irradiance !!what does it mean "/nm" in file?! need to convert units?!
 def Irradiance(opt_depth):
-    return np.array(I_data["irradiance"])*1e12 * np.exp(-np.array(opt_depth))
+    return np.array(I_data["irradiance"]) * np.exp(-np.array(opt_depth))
 
 
 
 #make plots of optical depth (logarithmic scale for the optical depth?)
-key = 0
-for ele in optical_depth:
-    key += 1
+xcoord = I_data["wavelength"]
+ycoord = n_data.iloc[91:,0]
+for key,ele in enumerate(optical_depth):
+    irradiance = Irradiance(ele)
     fig, axs = plt.subplots(2,1)
-    plt.suptitle(f"solar zenith angle {Xi[key-1]} degrees")
-    plot = axs[0].pcolormesh(ele, norm=mcolors.LogNorm(vmin = 1e-1, vmax= 1e4))
-    plot2 = axs[1].pcolormesh(Irradiance(ele), norm=mcolors.LogNorm(vmin = 1e5, vmax = 1e10))
-    cbar = fig.colorbar(plot)
+    plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
+    plot1 = axs[0].pcolormesh(xcoord, ycoord, ele, norm=mcolors.LogNorm(vmin = 1e-2, vmax= 1e3), cmap="plasma")
+    plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance, norm=mcolors.LogNorm(vmin = 1e-7, vmax = 1e-2), cmap="plasma")
+    cbar1 = fig.colorbar(plot1)
     cbar2 = fig.colorbar(plot2)
-    cbar.set_label("optical depth [m]")
+    cbar1.set_label("optical depth [m]")
     cbar2.set_label("Irradiance")
-    
+    axs[0].set_xlabel("wavelength [nm]")
+    axs[0].set_ylabel("height [km]")
+    axs[1].set_xlabel("wavelength [nm]")
+    axs[1].set_ylabel("height [km]")
     plt.tight_layout()
     plt.show()
 
@@ -91,21 +96,16 @@ plt.show()
 
 
 #wavelength variations of cross sections
-plt.plot(cs_data.iloc[:,0], cs_data.iloc[:,1], label = "N2")
-plt.plot(cs_data.iloc[:,0], cs_data.iloc[:,2], label = "O")
-plt.plot(cs_data.iloc[:,0], cs_data.iloc[:,3], label = "O2")
-plt.title("absorption cross sections for different species")
-plt.xlabel("wavelength [m]")
-plt.ylabel("absorption cross section [m^2]")
-plt.legend()
-plt.show()
+plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,1], label = "N2")
+plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,2], label = "O")
+plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,3], label = "O2")
 
 #wavelength variations of cross sections
-plt.plot(cs_N2, label = "N2")
-plt.plot(cs_O, label = "O")
-plt.plot(cs_O2, label = "O2")
-plt.title("absorption cross sections for different species, interpolated")
-plt.xlabel("wavelength [m]")
+plt.plot(I_data["wavelength"],cs_N2, label = "N2 interpolated")
+plt.plot(I_data["wavelength"],cs_O, label = "O interpolated")
+plt.plot(I_data["wavelength"], cs_O2, label = "O2 interpolated")
+plt.title("absorption cross sections for different species")
+plt.xlabel("wavelength [nm]")
 plt.ylabel("absorption cross section [m^2]")
 plt.legend()
 plt.show()
