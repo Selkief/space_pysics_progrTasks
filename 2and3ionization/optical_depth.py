@@ -2,10 +2,6 @@
 ##Make functions that calculate the optical depth as a function of altitude and wavelength
 # for vertical incidence, and for variable zenith-angle of the incident light
 
-#can either use two (or three) different functions for the 3 "levels" of incidence angle
-#or just use the most complicated one which should be reduced to the simpler ones automatically
-#when using lower angles of incidence
-
 #make plots with altitude variations of thermospheric densities
 #make plots with wavelength variations of cross sections
 
@@ -13,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
-from scipy.interpolate import CubicSpline, PchipInterpolator,Akima1DInterpolator
 
 #read in all necessary data
 #heightprofiles of number densities [cm^-3]
@@ -30,12 +25,13 @@ cs_O = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,2
 cs_O2 = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,3] )
 cs = [cs_O, cs_N2, cs_O2] #ordered to fit the order in the n_data file [m^2]
 
-#number densities all species heightprofiles [cm^-3]
+#number densities all species combined for heightprofiles [cm^-3]
 n_all = n_data.iloc[:,1] + n_data.iloc[:,2] + n_data.iloc[:,3]
 
 #relevant angles for Xi
 Xi = [0, 15, 30, 45, 60] #[degrees]
 
+################define functions###############
 #optical depth for different angles of Xi, returns a list over all wavelength present in input data
 #this should work for angles up to 60 degrees
 def Tau(n_profiles, nr_of_species, altitude, angle):
@@ -47,65 +43,79 @@ def Tau(n_profiles, nr_of_species, altitude, angle):
         tau += np.dot( cs[i] , integral )
     return tau * 1/np.cos( angle * (np.pi/180) )
 
+#Irradiance !!what does it mean "/nm" in file?! need to convert units?!
+def Irradiance(opt_depth, Irradiance):
+    return np.array(Irradiance) * np.exp(-np.array(opt_depth))
+
+##convert Watts/m^2 into photons/s/m^2 (Plancks law E= hc/wavelength)
+def wave2photon(wavelength, E_tot):
+    h = 4.135667696e-15 #plancks constant for eV [eV*s]
+    c = 2.99792458e8 #speed of light [m/s]
+    E = h*c/wavelength
+    nr_photons = E_tot/E
+    return nr_photons
+
+###############calculate all the stuff#################
 #calculate optical depth for heights in the thermosphere (90-600km)
 #and for different angles of incidence
+
 optical_depth = [] #in [m]
+irradiance = []
 for idx,X in enumerate(Xi):
     T = []
     for m in range(90,600):
         T.append( Tau(n_data, 3, m, X) )
+    I = Irradiance(T,I_data["irradiance"])
     optical_depth.append(T)
-
-#Irradiance !!what does it mean "/nm" in file?! need to convert units?!
-def Irradiance(opt_depth):
-    return np.array(I_data["irradiance"]) * np.exp(-np.array(opt_depth))
+    irradiance.append(I)
 
 
 
-#make plots of optical depth (logarithmic scale for the optical depth?)
-xcoord = I_data["wavelength"]
-ycoord = n_data.iloc[91:,0]
-for key,ele in enumerate(optical_depth):
-    irradiance = Irradiance(ele)
-    fig, axs = plt.subplots(2,1)
-    plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
-    plot1 = axs[0].pcolormesh(xcoord, ycoord, ele, norm=mcolors.LogNorm(vmin = 1e-2, vmax= 1e3), cmap="plasma")
-    plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance, norm=mcolors.LogNorm(vmin = 1e-7, vmax = 1e-2), cmap="plasma")
-    cbar1 = fig.colorbar(plot1)
-    cbar2 = fig.colorbar(plot2)
-    cbar1.set_label("optical depth [m]")
-    cbar2.set_label("Irradiance")
-    axs[0].set_xlabel("wavelength [nm]")
-    axs[0].set_ylabel("height [km]")
-    axs[1].set_xlabel("wavelength [nm]")
-    axs[1].set_ylabel("height [km]")
-    plt.tight_layout()
+#make plots, only if file is executed directly
+if __name__ == "__main__":
+    
+    xcoord = I_data["wavelength"]
+    ycoord = n_data.iloc[91:,0]
+    for key,ele in enumerate(optical_depth):
+        fig, axs = plt.subplots(2,1)
+        plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
+        plot1 = axs[0].pcolormesh(xcoord, ycoord, ele, norm=mcolors.LogNorm(vmin = 1e-2, vmax= 1e3), cmap="plasma")
+        plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance[key], norm=mcolors.LogNorm(vmin = 1e-7, vmax = 1e-2), cmap="plasma")
+        cbar1 = fig.colorbar(plot1)
+        cbar2 = fig.colorbar(plot2)
+        cbar1.set_label("optical depth [m]")
+        cbar2.set_label("Irradiance")
+        axs[0].set_xlabel("wavelength [nm]")
+        axs[0].set_ylabel("height [km]")
+        axs[1].set_xlabel("wavelength [nm]")
+        axs[1].set_ylabel("height [km]")
+        plt.tight_layout()
+        plt.show()
+
+    #number densities
+    plt.plot(n_data.iloc[90:,1], n_data.iloc[90:,0], label="O")
+    plt.plot(n_data.iloc[90:,2], n_data.iloc[90:,0], label="N2")
+    plt.plot(n_data.iloc[90:,3], n_data.iloc[90:,0], label="O2")
+    plt.plot(n_all[90:], n_data.iloc[90:,0], label = "all species")
+    plt.xscale("log")
+    plt.title("number densities in the thermosphere")
+    plt.xlabel("n [cm^-3]")
+    plt.ylabel("height [km]")
+    plt.legend()
     plt.show()
 
-#number densities
-plt.plot(n_data.iloc[90:,1], n_data.iloc[90:,0], label="O")
-plt.plot(n_data.iloc[90:,2], n_data.iloc[90:,0], label="N2")
-plt.plot(n_data.iloc[90:,3], n_data.iloc[90:,0], label="O2")
-plt.plot(n_all[90:], n_data.iloc[90:,0], label = "all species")
-plt.xscale("log")
-plt.title("number densities in the thermosphere")
-plt.xlabel("n [cm^-3]")
-plt.ylabel("height [km]")
-plt.legend()
-plt.show()
 
+    #wavelength variations of cross sections
+    plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,1], label = "N2")
+    plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,2], label = "O")
+    plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,3], label = "O2")
 
-#wavelength variations of cross sections
-plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,1], label = "N2")
-plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,2], label = "O")
-plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,3], label = "O2")
-
-#wavelength variations of cross sections
-plt.plot(I_data["wavelength"],cs_N2, label = "N2 interpolated")
-plt.plot(I_data["wavelength"],cs_O, label = "O interpolated")
-plt.plot(I_data["wavelength"], cs_O2, label = "O2 interpolated")
-plt.title("absorption cross sections for different species")
-plt.xlabel("wavelength [nm]")
-plt.ylabel("absorption cross section [m^2]")
-plt.legend()
-plt.show()
+    #wavelength variations of cross sections
+    plt.plot(I_data["wavelength"],cs_N2, label = "N2 interpolated")
+    plt.plot(I_data["wavelength"],cs_O, label = "O interpolated")
+    plt.plot(I_data["wavelength"], cs_O2, label = "O2 interpolated")
+    plt.title("absorption cross sections for different species")
+    plt.xlabel("wavelength [nm]")
+    plt.ylabel("absorption cross section [m^2]")
+    plt.legend()
+    plt.show()
