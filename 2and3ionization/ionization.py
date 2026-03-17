@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
-from optical_depth import optical_depth, irradiance, Xi, n_data, n_all, I_data
+from optical_depth import optical_depth, irradiance, irradiance_ph, Xi, n_data, n_all, I_data
 
 #load photo-ionisation cross sections
 phot_ion = pd.read_csv("2and3ionization/phot_ion.dat",sep=r"\s+", skiprows=6)
@@ -20,24 +20,17 @@ ion_cs_O2 = np.interp(I_data["wavelength"]*1e-9, phot_ion.iloc[:,0], phot_ion.il
 ion_cs = [ion_cs_O, ion_cs_N2, ion_cs_O2]
 
 
-#convert Watts/m^2 into photons/s/m^2 (Plancks law E= hc/wavelength)
-h = 4.135667696e-15 #plancks constant for eV [eV*s]
-c = 2.99792458e8 #speed of light [m/s]
-def wave2photon(wavelength):
-    E = h*c/wavelength
-
 #combined profiles for all species (sums up all seperate ionization rates)
 def photo_ion_rate(densities, EUVflux):
     q = 0
     for idx,species_cs in enumerate(ion_cs):
         integral = np.sum(EUVflux * species_cs, axis=1)
-        q +=  densities.iloc[91:,idx+1]*1e6 * integral *1e9 #convert cm^3 and nm into SI units (m)
+        q +=  densities.iloc[91:,idx+1]*1e6 * integral 
     return q
 
 total_photoion = []
 for X in range(len(Xi)):
-    total_photoion.append(photo_ion_rate(n_data, irradiance[X]))
-print(len(total_photoion))
+    total_photoion.append(photo_ion_rate(n_data*1e6, irradiance_ph[X])) #use SI units (m!)
 
 #make plots
 if __name__ == "__main__":
@@ -45,7 +38,7 @@ if __name__ == "__main__":
     ycoord = n_data.iloc[91:,0]
     for key,ele in enumerate(total_photoion):
         axs.plot(ele, ycoord, label = f"$\chi$ = {Xi[key]}")
-    axs.set_xlabel("ionization rate [ions/m^3/s]")
+    axs.set_xlabel("ionization rate [$m^{-3}$ $s^{-1}$]")
     axs.set_ylabel("height [km]")
     axs.set_xscale("log")
     plt.legend()

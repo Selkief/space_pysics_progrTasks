@@ -34,25 +34,25 @@ Xi = [0, 15, 30, 45, 60] #[degrees]
 ################define functions###############
 #optical depth for different angles of Xi, returns a list over all wavelength present in input data
 #this should work for angles up to 60 degrees
-def Tau(n_profiles, nr_of_species, altitude, angle):
+def Tau(n_profiles, altitude, angle):
     tau = 0
-    for i in range(nr_of_species):
+    for i, cs_species in enumerate(cs):
         integral = 0
         for z in range( altitude, len(n_data.iloc[:,0]) ):
             integral += n_profiles.iloc[z,i+1] * 1e6 * 1000
-        tau += np.dot( cs[i] , integral )
-    return tau * 1/np.cos( angle * (np.pi/180) )
+        tau += cs_species * integral 
+    return tau /np.cos( angle * (np.pi/180) )
 
 #Irradiance !!what does it mean "/nm" in file?! need to convert units?!
 def Irradiance(opt_depth, Irradiance):
     return np.array(Irradiance) * np.exp(-np.array(opt_depth))
 
 ##convert Watts/m^2 into photons/s/m^2 (Plancks law E= hc/wavelength)
-def wave2photon(wavelength, E_tot):
-    h = 4.135667696e-15 #plancks constant for eV [eV*s]
+def watts2photons(E_total, wavelengths):
+    h = 6.62607015e-34 #plancks constant
     c = 2.99792458e8 #speed of light [m/s]
-    E = h*c/wavelength
-    nr_photons = E_tot/E
+    E_i = h*c/np.array(wavelengths)
+    nr_photons = E_total/E_i
     return nr_photons
 
 ###############calculate all the stuff#################
@@ -61,13 +61,16 @@ def wave2photon(wavelength, E_tot):
 
 optical_depth = [] #in [m]
 irradiance = []
+irradiance_ph = []
 for idx,X in enumerate(Xi):
     T = []
     for m in range(90,600):
-        T.append( Tau(n_data, 3, m, X) )
+        T.append( Tau(n_data, m, X) )
     I = Irradiance(T,I_data["irradiance"])
+    I_ph = watts2photons(I, I_data["wavelength"]*1e-9)
     optical_depth.append(T)
     irradiance.append(I)
+    irradiance_ph.append(I_ph)
 
 
 
@@ -80,11 +83,11 @@ if __name__ == "__main__":
         fig, axs = plt.subplots(2,1)
         plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
         plot1 = axs[0].pcolormesh(xcoord, ycoord, ele, norm=mcolors.LogNorm(vmin = 1e-2, vmax= 1e3), cmap="plasma")
-        plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance[key], norm=mcolors.LogNorm(vmin = 1e-7, vmax = 1e-2), cmap="plasma")
+        plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance[key], norm=mcolors.LogNorm(vmin = 1e-6, vmax = 1e-2), cmap="plasma")
         cbar1 = fig.colorbar(plot1)
         cbar2 = fig.colorbar(plot2)
-        cbar1.set_label("optical depth [m]")
-        cbar2.set_label("Irradiance")
+        cbar1.set_label("optical depth")
+        cbar2.set_label("Irradiance [W $m^{-2} s^{-1} nm^{-1}$]")
         axs[0].set_xlabel("wavelength [nm]")
         axs[0].set_ylabel("height [km]")
         axs[1].set_xlabel("wavelength [nm]")
