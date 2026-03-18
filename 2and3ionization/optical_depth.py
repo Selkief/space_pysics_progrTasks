@@ -10,42 +10,54 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
 
-#read in all necessary data
+#read in all necessary data and initiate vectors/arrays
+
 #heightprofiles of number densities [cm^-3]
 n_data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
+height = n_data.iloc[:,0].to_numpy()
+
 #Irradiance [W/m^2/nm] for different wavelengths [nm]
 I_data = pd.read_csv("2and3ionization/fism_daily_hr19990216.dat")
-I_data.rename(columns={"wavelength (nm)": "wavelength", "irradiance (W/m^2/nm)" : "irradiance"}, inplace=True)
+wl = I_data["wavelength (nm)"].to_numpy()*1e-9 #wavelength in data in meters
+I_inf = I_data["irradiance (W/m^2/nm)"].to_numpy() #irradiance on top of atmopshere for different wavelengths
+
 #crosssections [m^2] for different species for different wavelengths [m]
 cs_data = pd.read_csv("2and3ionization/phot_abs.dat",sep=r"\s+", skiprows=8)
+wl_short = cs_data.iloc[:,0].to_numpy()
+cs_N2 = cs_data.iloc[:,1].to_numpy()
+cs_O = cs_data.iloc[:,2].to_numpy()
+cs_O2 = cs_data.iloc[:,3].to_numpy()
 
 #interpolate cross sections to irradiance-wavelengths
-cs_N2 = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,1] )
-cs_O = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,2] )
-cs_O2 = np.interp( I_data["wavelength"]*1e-9, cs_data.iloc[:,0], cs_data.iloc[:,3] )
-cs = [cs_O, cs_N2, cs_O2] #ordered to fit the order in the n_data file [m^2]
+pol_N2 = np.interp( wl, wl_short, cs_N2 )
+pol_O = np.interp( wl, wl_short, cs_O )
+pol_O2 = np.interp( wl, wl_short, cs_O2 )
 
-#number densities all species combined for heightprofiles [cm^-3]
-n_all = n_data.iloc[:,1] + n_data.iloc[:,2] + n_data.iloc[:,3]
+abs_cs = [pol_O, pol_N2, pol_O2] #ordered to fit the order in the n_data file [m^2]
+abs_cs_matrix = np.vstack(abs_cs)
+
+
+#number densities for heightprofiles [m^-3]
+n_all = n_data.iloc[:,1:4].to_numpy()*1e6
+#column density, integrate from the top down in steps of 1km
+dz=1000
+column_n = np.cumsum(n_all[::-1, :] * dz, axis=0)[::-1]
 
 #relevant angles for Xi
-Xi = [0, 15, 30, 45, 60] #[degrees]
+Xi = [0, 15, 30, 45, 60, 75] #[degrees]
+
+
 
 ################define functions###############
 #optical depth for different angles of Xi, returns a list over all wavelength present in input data
 #this should work for angles up to 60 degrees
-def Tau(n_profiles, altitude, angle):
-    tau = 0
-    for i, cs_species in enumerate(cs):
-        integral = 0
-        for z in range( altitude, len(n_data.iloc[:,0]) ):
-            integral += n_profiles.iloc[z,i+1] * 1e6 * 1000
-        tau += cs_species * integral 
-    return tau /np.cos( angle * (np.pi/180) )
+def Tau(column_density, absorption_cs, angle):
+    tau = column_density[90:] @ absorption_cs
+    return tau /np.cos( np.deg2rad(angle) )
 
-#Irradiance !!what does it mean "/nm" in file?! need to convert units?!
+#Irradiance
 def Irradiance(opt_depth, Irradiance):
-    return np.array(Irradiance) * np.exp(-np.array(opt_depth))
+    return np.array(Irradiance) * np.exp(-opt_depth)
 
 ##convert Watts/m^2 into photons/s/m^2 (Plancks law E= hc/wavelength)
 def watts2photons(E_total, wavelengths):
@@ -62,12 +74,10 @@ def watts2photons(E_total, wavelengths):
 optical_depth = [] #in [m]
 irradiance = []
 irradiance_ph = []
-for idx,X in enumerate(Xi):
-    T = []
-    for m in range(90,600):
-        T.append( Tau(n_data, m, X) )
-    I = Irradiance(T,I_data["irradiance"])
-    I_ph = watts2photons(I, I_data["wavelength"]*1e-9)
+for X in Xi:
+    T = Tau(column_n, abs_cs_matrix, X)
+    I = Irradiance(T , I_inf)
+    I_ph = watts2photons(I, wl)
     optical_depth.append(T)
     irradiance.append(I)
     irradiance_ph.append(I_ph)
@@ -77,8 +87,8 @@ for idx,X in enumerate(Xi):
 #make plots, only if file is executed directly
 if __name__ == "__main__":
     
-    xcoord = I_data["wavelength"]
-    ycoord = n_data.iloc[91:,0]
+    xcoord = wl*1e9
+    ycoord = n_data.iloc[90:,0]
     for key,ele in enumerate(optical_depth):
         fig, axs = plt.subplots(2,1)
         plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
@@ -96,10 +106,10 @@ if __name__ == "__main__":
         plt.show()
 
     #number densities
-    plt.plot(n_data.iloc[90:,1], n_data.iloc[90:,0], label="O")
-    plt.plot(n_data.iloc[90:,2], n_data.iloc[90:,0], label="N2")
-    plt.plot(n_data.iloc[90:,3], n_data.iloc[90:,0], label="O2")
-    plt.plot(n_all[90:], n_data.iloc[90:,0], label = "all species")
+    plt.plot(n_all[90:,0], height[90:], label="O")
+    plt.plot(n_all[90:,1], height[90:], label="N2")
+    plt.plot(n_all[90:,2], height[90:], label="O2")
+    plt.plot(np.sum(n_all[90:,:], axis=1), height[90:], label = "all species")
     plt.xscale("log")
     plt.title("number densities in the thermosphere")
     plt.xlabel("n [cm^-3]")
@@ -109,14 +119,14 @@ if __name__ == "__main__":
 
 
     #wavelength variations of cross sections
-    plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,1], label = "N2")
-    plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,2], label = "O")
-    plt.plot(np.array(cs_data.iloc[:,0])*1e9, cs_data.iloc[:,3], label = "O2")
+    plt.plot(wl_short*1e9, cs_N2, label = "N2")
+    plt.plot(wl_short*1e9, cs_O, label = "O")
+    plt.plot(wl_short*1e9, cs_O2, label = "O2")
 
     #wavelength variations of cross sections
-    plt.plot(I_data["wavelength"],cs_N2, label = "N2 interpolated")
-    plt.plot(I_data["wavelength"],cs_O, label = "O interpolated")
-    plt.plot(I_data["wavelength"], cs_O2, label = "O2 interpolated")
+    plt.plot(wl*1e9,pol_N2, label = "N2 interpolated")
+    plt.plot(wl*1e9,pol_O, label = "O interpolated")
+    plt.plot(wl*1e9, pol_O2, label = "O2 interpolated")
     plt.title("absorption cross sections for different species")
     plt.xlabel("wavelength [nm]")
     plt.ylabel("absorption cross section [m^2]")

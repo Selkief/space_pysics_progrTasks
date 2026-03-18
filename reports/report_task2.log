@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.28)  10 MAR 2026 12:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.28)  18 MAR 2026 13:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -582,6 +582,15 @@ ation/optdepth60.png>
 Package pdftex.def Info: C:/Users/skief/Documents/UiT/semester8/space physics/p
 rogrTasks/2and3ionization/optdepth60.png  used on input line 76.
 (pdftex.def)             Requested size: 204.9466pt x 153.70923pt.
+<C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/2and3ionizatio
+n/optdepth75.png, id=22, 462.528pt x 346.896pt>
+File: C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/2and3ioni
+zation/optdepth75.png Graphic file (type png)
+<use C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/2and3ioniz
+ation/optdepth75.png>
+Package pdftex.def Info: C:/Users/skief/Documents/UiT/semester8/space physics/p
+rogrTasks/2and3ionization/optdepth75.png  used on input line 79.
+(pdftex.def)             Requested size: 204.9466pt x 153.70923pt.
  [2 <C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/2and3ioniz
 ation/crosssec.png> <C:/Users/skief/Documents/UiT/semester8/space physics/progr
 Tasks/2and3ionization/n.png>]
@@ -589,7 +598,7 @@ Tasks/2and3ionization/n.png>]
 File: lstlang1.sty 2025/11/14 1.11b listings language file
 )
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 87.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 90.
 
 [3 <C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/2and3ioniza
 tion/optdepth0.png> <C:/Users/skief/Documents/UiT/semester8/space physics/progr
@@ -597,17 +606,18 @@ Tasks/2and3ionization/optdepth15.png> <C:/Users/skief/Documents/UiT/semester8/s
 pace physics/progrTasks/2and3ionization/optdepth30.png> <C:/Users/skief/Documen
 ts/UiT/semester8/space physics/progrTasks/2and3ionization/optdepth45.png> <C:/U
 sers/skief/Documents/UiT/semester8/space physics/progrTasks/2and3ionization/opt
-depth60.png>] [4] (report_task2.aux)
+depth60.png> <C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/2
+and3ionization/optdepth75.png>] [4] (report_task2.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 13275 strings out of 467871
- 278196 string characters out of 5418376
- 1188894 words of memory out of 5000000
- 42024 multiletter control sequences out of 15000+600000
+ 13287 strings out of 467871
+ 279000 string characters out of 5418376
+ 1188962 words of memory out of 5000000
+ 42036 multiletter control sequences out of 15000+600000
  636376 words of font info for 75 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  73i,8n,80p,464b,2127s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -624,9 +634,9 @@ s/skief/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 ><C:/Users/skief/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
 msy8.pfb><C:/Users/skief/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
 nts/cm/cmtt10.pfb>
-Output written on report_task2.pdf (4 pages, 515406 bytes).
+Output written on report_task2.pdf (4 pages, 581604 bytes).
 PDF statistics:
- 85 PDF objects out of 1000 (max. 8388607)
+ 87 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 36 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 
