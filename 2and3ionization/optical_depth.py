@@ -19,7 +19,8 @@ height = n_data.iloc[:,0].to_numpy()
 #Irradiance [W/m^2/nm] for different wavelengths [nm]
 I_data = pd.read_csv("2and3ionization/fism_daily_hr19990216.dat")
 wl = I_data["wavelength (nm)"].to_numpy()*1e-9 #wavelength in data in meters
-I_inf = I_data["irradiance (W/m^2/nm)"].to_numpy() #irradiance on top of atmopshere for different wavelengths
+wl = wl[:1000]
+I_inf = I_data["irradiance (W/m^2/nm)"].to_numpy()[:1000] #irradiance on top of atmopshere for different wavelengths
 
 #crosssections [m^2] for different species for different wavelengths [m]
 cs_data = pd.read_csv("2and3ionization/phot_abs.dat",sep=r"\s+", skiprows=8)
@@ -29,9 +30,9 @@ cs_O = cs_data.iloc[:,2].to_numpy()
 cs_O2 = cs_data.iloc[:,3].to_numpy()
 
 #interpolate cross sections to irradiance-wavelengths
-pol_N2 = np.interp( wl, wl_short, cs_N2 )
-pol_O = np.interp( wl, wl_short, cs_O )
-pol_O2 = np.interp( wl, wl_short, cs_O2 )
+pol_N2 = np.interp( wl[:1000], wl_short, cs_N2 )
+pol_O = np.interp( wl[:1000], wl_short, cs_O )
+pol_O2 = np.interp( wl[:1000], wl_short, cs_O2 )
 
 abs_cs = [pol_O, pol_N2, pol_O2] #ordered to fit the order in the n_data file [m^2]
 abs_cs_matrix = np.vstack(abs_cs)
@@ -52,7 +53,7 @@ Xi = [0, 15, 30, 45, 60, 75] #[degrees]
 #optical depth for different angles of Xi, returns a list over all wavelength present in input data
 #this should work for angles up to 60 degrees
 def Tau(column_density, absorption_cs, angle):
-    tau = column_density[90:] @ absorption_cs
+    tau = column_density[100:] @ absorption_cs
     return tau /np.cos( np.deg2rad(angle) )
 
 #Irradiance
@@ -88,7 +89,7 @@ for X in Xi:
 if __name__ == "__main__":
     
     xcoord = wl*1e9
-    ycoord = n_data.iloc[90:,0]
+    ycoord = n_data.iloc[100:,0]
     for key,ele in enumerate(optical_depth):
         fig, axs = plt.subplots(2,1)
         plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
