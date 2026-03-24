@@ -7,6 +7,7 @@
 import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
 
 #load data with all the densities
 msis = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
@@ -68,20 +69,40 @@ def reactions(t, z, q, height):
     n_O = n_O_data[ idx ]
     n_O2 = n_O2_data[ idx ]
     n_N2 = n_N2_data[ idx]
+
+    alpha_1 = alpha1[idx]
+    alpha_2 = alpha2[idx]
+    alpha_3 = alpha3[idx]
+    alpha_r = alphar[idx]
+    k_1 = k1[idx]
+    k_2 = k2[idx]
+    k_3 = k3
+    k_4 = k4
+    k_5 = k5[idx]
+    k_6 = k6[idx]
     
     #set up ODEs !!!MUSt adjust ion_rates in equations?!!
-    dn_e = q - n_e * (alpha1 * n_NOplus + alpha2 * n_O2plus + alpha3 * n_N2plus + alphar * n_Oplus)
-    dn_Oplus = q + k5 * n_O * n_N2plus - n_Oplus * (alphar * n_e + k1 * n_N2 + k2 * n_O2)
-    dn_O2plus = q + k2 * n_Oplus * n_O2 + k6 * n_N2plus * n_O2 - n_O2plus * (alpha2 * n_e + k3 * n_NO + k4 * n_N2)
-    dn_N2plus = q - n_N2plus * (alpha3 * n_e + k5 * n_O + k6 * n_O2)
-    dn_NOplus = q + k1 * n_Oplus * n_N2 + k3 * n_O2plus * n_NO + k4 * n_O2plus * n_N2 - alpha1 * n_NOplus *n_e
-    dn_NO = q + k4 * n_O2plus * n_N2 - k3 * n_O2plus * n_NO
+    dn_e = q - n_e * (alpha_1 * n_NOplus + alpha_2 * n_O2plus + alpha_3 * n_N2plus + alpha_r * n_Oplus)
+    dn_Oplus = q + k_5 * n_O * n_N2plus - n_Oplus * (alpha_r * n_e + k_1 * n_N2 + k_2 * n_O2)
+    dn_O2plus = q + k_2 * n_Oplus * n_O2 + k_6 * n_N2plus * n_O2 - n_O2plus * (alpha_2 * n_e + k_3 * n_NO + k_4 * n_N2)
+    dn_N2plus = q - n_N2plus * (alpha_3 * n_e + k_5 * n_O + k_6 * n_O2)
+    dn_NOplus = q + k_1 * n_Oplus * n_N2 + k_3 * n_O2plus * n_NO + k_4 * n_O2plus * n_N2 - alpha_1 * n_NOplus *n_e
+    dn_NO = q + k_4 * n_O2plus * n_N2 - k_3 * n_O2plus * n_NO
 
     return [dn_e, dn_Oplus, dn_O2plus, dn_N2plus, dn_NOplus, dn_NO]
 
 IC = initial_cond(110)
-sol = solve_ivp(reactions, [0,3600], IC, method = "RK45", args=(1e9, 110))
-    
+sol = solve_ivp(reactions, [0,360], IC, method = "RK45", args=(1e9, 250))
 
+
+labels = ["e", "O+", "O2+", "N2+", "NO+", "NO"]
+fig, axs = plt.subplots(6,1, figsize=(18,18))
+for idx, ele in enumerate(sol.y):
+    axs[idx].plot(sol.t, ele.T, label = labels[idx])
+    axs[idx].set_xlabel("t")
+    #axs[idx].plot_legend()
+plt.suptitle("densities at height 110km")
+plt.tight_layout()
+plt.show()
 
 
