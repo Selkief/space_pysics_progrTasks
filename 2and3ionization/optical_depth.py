@@ -20,7 +20,7 @@ height = n_data.iloc[:,0].to_numpy()
 I_data = pd.read_csv("2and3ionization/fism_daily_hr19990216.dat")
 wl = I_data["wavelength (nm)"].to_numpy()*1e-9 #wavelength in data in meters
 wl = wl[:1000]
-I_inf = I_data["irradiance (W/m^2/nm)"].to_numpy()[:1000] #irradiance on top of atmopshere for different wavelengths
+I_inf = I_data["irradiance (W/m^2/nm)"].to_numpy()[:1000]*1e9 #irradiance on top of atmopshere for different wavelengths
 
 #crosssections [m^2] for different species for different wavelengths [m]
 cs_data = pd.read_csv("2and3ionization/phot_abs.dat",sep=r"\s+", skiprows=8)

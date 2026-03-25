@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
-from optical_depth import Tau, Irradiance, watts2photons, irradiance_ph, Xi, n_data, n_all, height, wl, column_n
+from optical_depth import Tau, Irradiance, watts2photons, irradiance_ph, irradiance, Xi, n_all, height, wl, column_n
 
 #load photo-ionisation cross sections
 phot_ion = pd.read_csv("2and3ionization/phot_ion.dat",sep=r"\s+", skiprows=6)
@@ -41,6 +41,8 @@ def photo_ion_rate(densities, ion_cs, EUVflux):
         p += densities[100:, idx] * photon_energies
         q +=  densities[100:,idx]*1e6 * integral 
     return p, q
+
+
 ####TO DO: convert wl (in integration?) to energies with formula on sl 22####
 def photo_ion_rate_matrix(densities, ion_cs, EUVflux):
     q_total = np.zeros(EUVflux.shape[0])
