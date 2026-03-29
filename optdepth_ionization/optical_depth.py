@@ -13,7 +13,7 @@ import pandas as pd
 #read in all necessary data and initiate vectors/arrays
 
 #heightprofiles of number densities [cm^-3]
-n_data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
+n_data = pd.read_csv("1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
 height = n_data.iloc[:,0].to_numpy()
 
 #Irradiance [W/m^2/nm] for different wavelengths [nm]
@@ -85,7 +85,7 @@ for X in Xi:
 
 
 
-#make plots, only if file is executed directly
+#make plots
 if __name__ == "__main__":
     
     xcoord = wl*1e9
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         fig, axs = plt.subplots(2,1)
         plt.suptitle(f"solar zenith angle {Xi[key]} degrees")
         plot1 = axs[0].pcolormesh(xcoord, ycoord, ele, norm=mcolors.LogNorm(vmin = 1e-2, vmax= 1e3), cmap="plasma")
-        plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance[key], norm=mcolors.LogNorm(vmin = 1e-6, vmax = 1e-2), cmap="plasma")
+        plot2 = axs[1].pcolormesh(xcoord, ycoord, irradiance[key], norm=mcolors.LogNorm(vmin = 1e0, vmax = 1e7), cmap="plasma")
         cbar1 = fig.colorbar(plot1)
         cbar2 = fig.colorbar(plot2)
         cbar1.set_label("optical depth")
@@ -124,7 +124,6 @@ if __name__ == "__main__":
     plt.plot(wl_short*1e9, cs_O, label = "O")
     plt.plot(wl_short*1e9, cs_O2, label = "O2")
 
-    #wavelength variations of cross sections
     plt.plot(wl*1e9,pol_N2, label = "N2 interpolated")
     plt.plot(wl*1e9,pol_O, label = "O interpolated")
     plt.plot(wl*1e9, pol_O2, label = "O2 interpolated")

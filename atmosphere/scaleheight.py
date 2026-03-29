@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-data = pd.read_csv("C:/Users/skief/Documents/UiT/semester8/space physics/progrTasks/1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
+data = pd.read_csv("1atmosphere/MSIS.dat",sep=r"\s+", skiprows=16)
 
 ##constants
 k_B = 1.38e-23     #[m^2*kg/(K*s^2)] boltzmanns constant
